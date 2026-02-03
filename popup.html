@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial;
+    }
+
+    .container {
+      width: 360px;
+      background: #f5f5f7;
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      color: #1d1d1f;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #6e6e73;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 14px;
+      margin-top: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    input {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #d2d2d7;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    button {
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button.primary {
+      background: #0071e3;
+      color: #ffffff;
+    }
+
+    button.secondary {
+      background: #e8e8ed;
+      color: #1d1d1f;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .or-divider {
+      text-align: center;
+      font-size: 12px;
+      color: #6e6e73;
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      margin-top: 14px;
+      color: #6e6e73;
+      font-size: 13px;
+    }
+
+    .spinner {
+      margin: 8px auto;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #d2d2d7;
+      border-top: 3px solid #0071e3;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .instruction {
+      font-size: 13px;
+      color: #6e6e73;
+    }
+
+    /* ===== Recurring meetings ===== */
+
+    #recurringList {
+      width: 100%;
+    }
+
+    .recurring-item {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      column-gap: 12px;
+      padding: 8px 0;
+    }
+
+    .recurring-text .summary {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .recurring-text .recurrence {
+      font-size: 12px;
+      color: #6e6e73;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      font-size: 13px;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial;
+    }
+
+    footer {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 12px;
+      color: #6e6e73;
+      font-weight: 500;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- Greeting -->
+    <h1 id="greeting">Hello</h1>
+    <div class="subtitle">Lets get your timesheet filled.</div>
+
+    <!-- Name -->
+    <div class="card" id="nameCard">
+      <input type="text" id="userName" placeholder="Enter your name" />
+      <button class="primary" id="saveName">Continue</button>
+    </div>
+
+    <!-- Inputs -->
+    <div class="card" id="inputCard" style="display:none">
+
+      <!-- Date -->
+      <label style="font-size:13px; font-weight:600;">Week start date</label>
+      <span style="font-size:12px; color:#6e6e73;">
+        Select <strong>Sunday</strong> as the start of the week
+      </span>
+      <input type="date" id="weekSunday" />
+
+      <!-- ICS SECTION (THIS IS WHAT GETS HIDDEN) -->
+      <div id="icsSection">
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label style="font-size:13px; font-weight:600;">
+            Outlook ICS link
+          </label>
+
+          <a
+            href="https://learn.microsoft.com/en-us/answers/questions/4617072/how-to-export-outlook-calendar-to-ics-link"
+            target="_blank"
+            style="font-size:12px; color:#0071e3; text-decoration:none;"
+          >
+            How to get ICS?
+          </a>
+        </div>
+
+        <input
+          type="url"
+          id="icsUrl"
+          placeholder="Paste Outlook ICS link"
+        />
+
+        <div class="or-divider">OR</div>
+
+        <input type="file" id="icsFile" accept=".ics" />
+
+      </div>
+
+      <button class="primary" id="generate">
+        Generate Timesheet
+      </button>
+
+      <button class="secondary" id="changeCalendar" style="display:none">
+        🔄 Change calendar
+      </button>
+    </div>
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      Processing…
+    </div>
+
+    <!-- Recurring -->
+    <div class="card" id="recurringBox" style="display:none">
+      <strong>Recurring meetings found</strong>
+      <div class="instruction">
+        Select recurring meetings and insert them into your week
+      </div>
+      <div id="recurringList"></div>
+      <button class="secondary" id="applyRecurring">
+        ➕ Insert selected recurring meetings
+      </button>
+    </div>
+
+    <div id="output"></div>
+
+    <div class="card" id="pushAllBox" style="display:none">
+      <button class="secondary" id="pushAll">
+        🚀 Push full week to ServiceNow
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div>
+        Your calendar is processed in memory and discarded immediately.
+        Nothing is stored.
+      </div>
+      <div style="margin-top:6px;">
+        Made with ❤️ in Chandigarh
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
